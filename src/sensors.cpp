@@ -5,6 +5,8 @@ static uint8_t timeout;
 static uint8_t data_buffer[5] = {0};
 static portMUX_TYPE spinlock_mux = portMUX_INITIALIZER_UNLOCKED;
 
+
+
 void Pin_DHT22_Init(gpio_num_t pin) {
     gpio_config_t pin_config = {
         .pin_bit_mask = (1ULL << pin),
@@ -123,6 +125,46 @@ esp_err_t DHT22_send_receive_data(float *temperature, float *humidity) {
     ////////////////////HUMIDITY START////////////////////
     *humidity = (float)raw_humidity / 10.0;
     ////////////////////HUMIDITY END////////////////////
+
+    return ESP_OK;
+}
+
+
+//////////////////////LDR SENSOR FUNCTIONS START////////////////////
+
+static adc_oneshot_unit_handle_t LDRHANDLE; // ADC Handle for LDR Sensor
+
+// LDR Sensor Pin Configuration
+void Pin_LDR_Init() {
+    adc_oneshot_unit_init_cfg_t pin_config = {
+        .unit_id = ADC_UNIT_2, // Use ADC2 for LDR sensor
+        .clk_src = ADC_RTC_CLK_SRC_DEFAULT, // Use default clock source
+        .ulp_mode = ADC_ULP_MODE_DISABLE // Disable ULP mode for LDR sensor
+    };
+    adc_oneshot_new_unit(&pin_config, &LDRHANDLE); // Create a new ADC unit for LDR sensor
+
+    // Configure ADC channel for LDR sensor
+    adc_oneshot_chan_cfg_t pin_channel = {
+        .atten = ADC_ATTEN_DB_12, // Set attenuation to 12 dB for LDR sensor
+        .bitwidth = ADC_BITWIDTH_12 // Set bit width to 12 bits for LDR sensor
+    };
+    adc_oneshot_config_channel(LDRHANDLE, ADC_CHANNEL_8, &pin_channel); // Configure ADC channel 8 for LDR sensor
+}
+
+// LDR Sensor Data Reading
+esp_err_t LDR_receive_data(float *percent, int *raw_value) {
+    *raw_value = 0;
+    *percent = 0;
+
+//Read raw ADC value from LDR sensor
+    if(adc_oneshot_read(LDRHANDLE, ADC_CHANNEL_8, raw_value) == ESP_OK) {
+        //Range-Fix
+        if(*raw_value > Dark) *raw_value = Dark;
+        if(*raw_value < Bright) *raw_value = Bright;
+
+        // Conversion & Inversion
+        *percent = ((Dark - *raw_value) * 100.0f / (Dark - Bright));
+    }
 
     return ESP_OK;
 }
