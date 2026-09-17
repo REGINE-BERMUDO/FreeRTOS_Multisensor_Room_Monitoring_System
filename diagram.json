@@ -2,7 +2,26 @@
   "version": 1,
   "author": "Regine Bermudo",
   "editor": "wokwi",
-  "parts": [ { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} } ],
-  "connections": [ [ "esp:TX", "$serialMonitor:RX", "", [] ], [ "esp:RX", "$serialMonitor:TX", "", [] ] ],
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 86.4, "left": 4.84, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -134.1, "left": 23.4, "attrs": {} },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 24,
+      "left": 18.65,
+      "rotate": 90,
+      "attrs": { "value": "10000" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "dht1:VCC", "r1:1", "red", [ "v19.2", "h9.6" ] ],
+    [ "r1:1", "esp:3V3", "red", [ "h0" ] ],
+    [ "dht1:SDA", "r1:2", "green", [ "v9.6", "h9.7", "v67.2" ] ],
+    [ "r1:2", "esp:18", "green", [ "h0", "v18", "h67.2", "v115.2" ] ],
+    [ "dht1:GND", "esp:GND.2", "black", [ "v86.4", "h28.8" ] ]
+  ],
   "dependencies": {}
 }
