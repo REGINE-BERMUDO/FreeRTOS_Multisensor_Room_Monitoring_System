@@ -10,7 +10,8 @@
 extern QueueHandle_t sensorQueue;
 
 // FreeRTOS Tasks Declaration
-void sensorTask(void *pvParameters);
+void SensorTask(void *pvParameters);
+void DisplayTask(void *pvParameters);
 
 // One-Call Function for FreeRTOS Tasks Configuration
 void Initialize_FreeRTOS_Tasks(void);
