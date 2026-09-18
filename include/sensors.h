@@ -3,6 +3,12 @@
 
 #include <esp_log.h> // ESP32 Logging Library
 
+typedef struct {
+    float temperature; // Temperature reading from the DHT22 sensor
+    float humidity; // Temperature and humidity readings from the DHT22 sensor
+    int lightLevel; // Light level percentage (0-100)
+    bool motionDetected; // Motion detection status
+} SensorData;
 
 /// DHT22 Sensor Definitions
 #define FiftyMilliseconds 50
