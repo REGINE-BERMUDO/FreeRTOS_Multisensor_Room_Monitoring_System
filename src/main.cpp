@@ -1,10 +1,11 @@
 #include "rtos_objects.h"
 #include "sensors.h"
+#include "display.h"
 
 const char *MAIN_MONITOR_TAG = "MAIN_MONITOR";
 
-void sensorTask(void *pvParameters) {
-    TickType_t lastWakeTime = xTaskGetTickCount();
+void SensorTask(void *pvParameters) {
+    TickType_t lastWakeTime = xTaskGetTickCount(); // Get the current tick count for task delay management
 
     Initialize_DHT22_LDR_PINS(); // Initialize DHT22 and LDR sensor pins
     float temperature = 0.0f;
@@ -15,16 +16,25 @@ void sensorTask(void *pvParameters) {
 
 
     while(true) {
-        esp_err_t DHT22_STATUS = DHT22_Print(&temperature, &humidity);
-        esp_err_t LDR_STATUS = LDR_Print(&percent, &raw_value);
-        Queue_SENSORS_SEND_DATA(DHT22_STATUS, LDR_STATUS, &temperature, &humidity, &percent, &raw_value);
+        esp_err_t DHT22_STATUS = DHT22_Print(&temperature, &humidity); // Get temperature and humidity from DHT22 sensor
+        esp_err_t LDR_STATUS = LDR_Print(&percent, &raw_value); // Get light intensity percentage and raw ADC value from LDR sensor
+        Queue_SENSORS_SEND_DATA(DHT22_STATUS, LDR_STATUS, &temperature, &humidity, &percent, &raw_value); // Send sensor data to the queue
 
         vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(2000)); // Delay for 2 seconds
     }
 }
 
+void DisplayTask(void *pvParameters) {
+}
+
 extern "C" void app_main() {
     ESP_LOGI(MAIN_MONITOR_TAG, "\nBCA152 FreeRTOS Multisensor Monitor\nSYSTEM STARTING...");
+
+
+    Initialize_I2CFOR_SSD1306(); // Initialize I2C for SSD1306 display
+    Display_Clear(); // Clear the display
+    Display_DrawText(0, 0, "Hello, ESP32!"); // Draw text on the display
+    Display_Show(); // Show the display
 
     Initialize_FreeRTOS_Queues(); // Initialize FreeRTOS queues    
     Initialize_FreeRTOS_Tasks(); // Initialize FreeRTOS tasks
