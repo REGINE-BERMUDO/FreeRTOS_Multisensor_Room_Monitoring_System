@@ -1,11 +1,20 @@
 #ifndef RTOS_OBJECTS_H
 #define RTOS_OBJECTS_H
 
-#include <FreeRTOS/FreeRTOS.h>
+#define SENSORQUEUELENGTH 5
+
+#include <freeRTOS/FreeRTOS.h>
 #include <freeRTOS/task.h>
+#include "sensors.h"
 
-void sensorTask(void *pvParameters); // Task function for reading sensor data
+extern QueueHandle_t sensorQueue;
 
-void Initialize_FreeRTOS_Tasks(void); // Function to initialize FreeRTOS tasks
+// FreeRTOS Tasks Declaration
+void sensorTask(void *pvParameters);
 
-#endif // RTOS_OBJECTS_H
+// One-Call Function for FreeRTOS Tasks Configuration
+void Initialize_FreeRTOS_Tasks(void);
+
+esp_err_t Initialize_FreeRTOS_Queues(void);
+
+#endif
