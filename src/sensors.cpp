@@ -175,22 +175,48 @@ void Initialize_DHT22_LDR_PINS(void) {
 }
 
 // One-Call Function for DHT22 Print
-void DHT22_Print(float *temperature, float *humidity) {
+esp_err_t DHT22_Print(float *temperature, float *humidity) {
     esp_err_t dht22_result = DHT22_send_receive_data(temperature, humidity);
 
     if(dht22_result == ESP_OK) {
         ESP_LOGI(SENSOR_MONITOR_TAG, "Temperature: %.2f°C, Humidity: %.2f%%", *temperature, *humidity);
+        return ESP_OK;
     } else {
         ESP_LOGE(SENSOR_MONITOR_TAG, "Failed to read from DHT22 sensor. Error code: %d", dht22_result);
-    }
+        return ESP_ERR_TIMEOUT;
+    } 
 }
 
 // One-Call Function for LDR Print
-void LDR_Print(float *percent, int *raw_value) {
+esp_err_t LDR_Print(float *percent, int *raw_value) {
     esp_err_t ldr_result = LDR_receive_data(percent, raw_value);
     if(ldr_result == ESP_OK) {
         ESP_LOGI(SENSOR_MONITOR_TAG, "Percent: %.2f%% (Raw: %d)", *percent, *raw_value);
+        return ESP_OK;
     } else {
         ESP_LOGE(SENSOR_MONITOR_TAG, "Failed to read from LDR sensor. Error code: %d", ldr_result);
+        return ESP_ERR_TIMEOUT;
     }
+}
+
+// One-Call Function for Queueing Sensor Data
+void Queue_SENSORS_SEND_DATA(esp_err_t DHT22STATUS, esp_err_t LDRSTATUS, float *temperature, float *humidity, float *percent, int *raw_value) {
+    SensorData readSensorDataQueue;
+
+    if(DHT22STATUS == ESP_OK) {
+        readSensorDataQueue.temperature = *temperature;
+        readSensorDataQueue.humidity = *humidity;
+    } else {
+        readSensorDataQueue.temperature = 0.0f;
+        readSensorDataQueue.humidity = 0.0f;
+    }
+
+    if(LDRSTATUS == ESP_OK) {
+        readSensorDataQueue.lightLevel = *percent;
+    } else {
+        readSensorDataQueue.lightLevel = 0;
+    }
+    readSensorDataQueue.motionDetected = 0; // PIR NOT YET CONFIGURED
+
+    xQueueSend(sensorQueue, &readSensorDataQueue, portMAX_DELAY);
 }

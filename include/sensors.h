@@ -1,13 +1,14 @@
 #ifndef SENSORS_H
 #define SENSORS_H
 
-#include <esp_log.h> // ESP32 Logging Library
+#include <esp_log.h>
+#include "rtos_objects.h"
 
 typedef struct {
-    float temperature; // Temperature reading from the DHT22 sensor
-    float humidity; // Temperature and humidity readings from the DHT22 sensor
-    int lightLevel; // Light level percentage (0-100)
-    bool motionDetected; // Motion detection status
+    float temperature;
+    float humidity;
+    int lightLevel;
+    bool motionDetected;
 } SensorData;
 
 /// DHT22 Sensor Definitions
@@ -15,7 +16,7 @@ typedef struct {
 #define EightyMicroseconds 80
 #define SeventyMicroseconds 70
 #define TwentyEightMicroseconds 28
-#define DHT22PIN GPIO_NUM_18 // DHT22 Sensor Pin Configuration
+#define DHT22PIN GPIO_NUM_18
 
 /// LDR Sensor Definitions
 #define Dark  4063
@@ -38,10 +39,8 @@ esp_err_t LDR_receive_data(float *percent, int *raw_value);
 
 // One-Call Function for DHT22 & LDR Configurations
 void Initialize_DHT22_LDR_PINS(void);
-void DHT22_Print(float *temperature, float *humidity);
-void LDR_Print(float *percent, int *raw_value);
-
-
-
+esp_err_t DHT22_Print(float *temperature, float *humidity);
+esp_err_t LDR_Print(float *percent, int *raw_value);
+void Queue_SENSORS_SEND_DATA(esp_err_t DHT22STATUS, esp_err_t LDRSTATUS, float *temperature, float *humidity, float *percent, int *raw_value);
 
 #endif // SENSORS_H
