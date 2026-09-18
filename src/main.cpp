@@ -15,8 +15,9 @@ void sensorTask(void *pvParameters) {
 
 
     while(true) {
-        DHT22_Print(&temperature, &humidity);
-        LDR_Print(&percent, &raw_value);
+        esp_err_t DHT22_STATUS = DHT22_Print(&temperature, &humidity);
+        esp_err_t LDR_STATUS = LDR_Print(&percent, &raw_value);
+        Queue_SENSORS_SEND_DATA(DHT22_STATUS, LDR_STATUS, &temperature, &humidity, &percent, &raw_value);
 
         vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(2000)); // Delay for 2 seconds
     }
@@ -25,6 +26,7 @@ void sensorTask(void *pvParameters) {
 extern "C" void app_main() {
     ESP_LOGI(MAIN_MONITOR_TAG, "\nBCA152 FreeRTOS Multisensor Monitor\nSYSTEM STARTING...");
 
+    Initialize_FreeRTOS_Queues(); // Initialize FreeRTOS queues    
     Initialize_FreeRTOS_Tasks(); // Initialize FreeRTOS tasks
 }
 
