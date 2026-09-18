@@ -1,15 +1,12 @@
-#include <sensors.h>
+#include "sensors.h"
 
-static gpio_num_t dht22_pin;
 static uint8_t timeout;
 static uint8_t data_buffer[5] = {0};
 static portMUX_TYPE spinlock_mux = portMUX_INITIALIZER_UNLOCKED;
 
-
-
-void Pin_DHT22_Init(gpio_num_t pin) {
+static void Pin_DHT22_Init() {
     gpio_config_t pin_config = {
-        .pin_bit_mask = (1ULL << pin),
+        .pin_bit_mask = (1ULL << DHT22PIN),
         .mode = GPIO_MODE_INPUT_OUTPUT_OD,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -17,7 +14,6 @@ void Pin_DHT22_Init(gpio_num_t pin) {
     };
 
     gpio_config(&pin_config);
-    dht22_pin = pin;
 }
 
 esp_err_t DHT22_send_receive_data(float *temperature, float *humidity) {
@@ -29,20 +25,20 @@ esp_err_t DHT22_send_receive_data(float *temperature, float *humidity) {
 
     ////////////////////MCU SEND SIGNAL START////////////////////
     // MCU Initial Pin (HIGH)
-    gpio_set_level(dht22_pin, 1);
+    gpio_set_level(DHT22PIN, 1);
 
     // MCU Pin (LOW for 18ms)
-    gpio_set_level(dht22_pin, 0);
+    gpio_set_level(DHT22PIN, 0);
     vTaskDelay(pdMS_TO_TICKS(18));
 
     // MCU Pin (High for 40µs)
-    gpio_set_level(dht22_pin, 1);
+    gpio_set_level(DHT22PIN, 1);
     esp_rom_delay_us(40);
     ////////////////////MCU SEND SIGNAL END////////////////////
 
     ////////////////////DHT22 PULL SIGNAL DELAY START////////////////////
     timeout = 0;
-    while(gpio_get_level(dht22_pin) != 0) {
+    while(gpio_get_level(DHT22PIN) != 0) {
         esp_rom_delay_us(1);
         if(++timeout > FiftyMilliseconds) {
             return ESP_ERR_TIMEOUT;
@@ -53,7 +49,7 @@ esp_err_t DHT22_send_receive_data(float *temperature, float *humidity) {
     ////////////////////DHT22 RESPONSE SIGNAL START////////////////////
     // DHT22 Pin (Low for 80µs)
     timeout = 0;
-    while(gpio_get_level(dht22_pin) != 1) {
+    while(gpio_get_level(DHT22PIN) != 1) {
         esp_rom_delay_us(1);
         if(++timeout > EightyMicroseconds) {
             return ESP_ERR_TIMEOUT;
@@ -62,7 +58,7 @@ esp_err_t DHT22_send_receive_data(float *temperature, float *humidity) {
 
     // DHT22 Pin (High for 80µs)
     timeout = 0;
-    while(gpio_get_level(dht22_pin) != 0) {
+    while(gpio_get_level(DHT22PIN) != 0) {
         esp_rom_delay_us(1);
         if(++timeout > EightyMicroseconds) {
             return ESP_ERR_TIMEOUT;
@@ -75,7 +71,7 @@ esp_err_t DHT22_send_receive_data(float *temperature, float *humidity) {
     for(int i = 0; i < 40; i++) {
         // DHT22 Pin (Low for 50µs)
         timeout = 0;
-        while(gpio_get_level(dht22_pin) == 0) {
+        while(gpio_get_level(DHT22PIN) == 0) {
             esp_rom_delay_us(1);
             if(++timeout > FiftyMilliseconds) {
                 portEXIT_CRITICAL(&spinlock_mux);
@@ -85,7 +81,7 @@ esp_err_t DHT22_send_receive_data(float *temperature, float *humidity) {
 
         // DHT22 Pin (High Logic if 70µs or above)
         timeout = 0;
-        while(gpio_get_level(dht22_pin) == 1) {
+        while(gpio_get_level(DHT22PIN) == 1) {
             esp_rom_delay_us(1);
             if(++timeout > SeventyMicroseconds) {
                 portEXIT_CRITICAL(&spinlock_mux);
@@ -130,33 +126,30 @@ esp_err_t DHT22_send_receive_data(float *temperature, float *humidity) {
 }
 
 
-//////////////////////LDR SENSOR FUNCTIONS START////////////////////
 
-static adc_oneshot_unit_handle_t LDRHANDLE; // ADC Handle for LDR Sensor
 
-// LDR Sensor Pin Configuration
-void Pin_LDR_Init() {
+
+static adc_oneshot_unit_handle_t LDRHANDLE;
+
+static void Pin_LDR_Init() {
     adc_oneshot_unit_init_cfg_t pin_config = {
-        .unit_id = ADC_UNIT_2, // Use ADC2 for LDR sensor
-        .clk_src = ADC_RTC_CLK_SRC_DEFAULT, // Use default clock source
-        .ulp_mode = ADC_ULP_MODE_DISABLE // Disable ULP mode for LDR sensor
+        .unit_id = ADC_UNIT_2,
+        .clk_src = ADC_RTC_CLK_SRC_DEFAULT,
+        .ulp_mode = ADC_ULP_MODE_DISABLE
     };
-    adc_oneshot_new_unit(&pin_config, &LDRHANDLE); // Create a new ADC unit for LDR sensor
+    adc_oneshot_new_unit(&pin_config, &LDRHANDLE);
 
-    // Configure ADC channel for LDR sensor
     adc_oneshot_chan_cfg_t pin_channel = {
-        .atten = ADC_ATTEN_DB_12, // Set attenuation to 12 dB for LDR sensor
-        .bitwidth = ADC_BITWIDTH_12 // Set bit width to 12 bits for LDR sensor
+        .atten = ADC_ATTEN_DB_12,
+        .bitwidth = ADC_BITWIDTH_12
     };
-    adc_oneshot_config_channel(LDRHANDLE, ADC_CHANNEL_8, &pin_channel); // Configure ADC channel 8 for LDR sensor
+    adc_oneshot_config_channel(LDRHANDLE, ADC_CHANNEL_8, &pin_channel);
 }
 
-// LDR Sensor Data Reading
 esp_err_t LDR_receive_data(float *percent, int *raw_value) {
     *raw_value = 0;
     *percent = 0;
 
-//Read raw ADC value from LDR sensor
     if(adc_oneshot_read(LDRHANDLE, ADC_CHANNEL_8, raw_value) == ESP_OK) {
         //Range-Fix
         if(*raw_value > Dark) *raw_value = Dark;
@@ -167,4 +160,37 @@ esp_err_t LDR_receive_data(float *percent, int *raw_value) {
     }
 
     return ESP_OK;
+}
+
+
+
+
+
+const char *SENSOR_MONITOR_TAG = "SENSOR";
+
+// One-Call Function for DHT22 & LDR Configurations
+void Initialize_DHT22_LDR_PINS(void) {
+    Pin_DHT22_Init();
+    Pin_LDR_Init();
+}
+
+// One-Call Function for DHT22 Print
+void DHT22_Print(float *temperature, float *humidity) {
+    esp_err_t dht22_result = DHT22_send_receive_data(temperature, humidity);
+
+    if(dht22_result == ESP_OK) {
+        ESP_LOGI(SENSOR_MONITOR_TAG, "Temperature: %.2f°C, Humidity: %.2f%%", *temperature, *humidity);
+    } else {
+        ESP_LOGE(SENSOR_MONITOR_TAG, "Failed to read from DHT22 sensor. Error code: %d", dht22_result);
+    }
+}
+
+// One-Call Function for LDR Print
+void LDR_Print(float *percent, int *raw_value) {
+    esp_err_t ldr_result = LDR_receive_data(percent, raw_value);
+    if(ldr_result == ESP_OK) {
+        ESP_LOGI(SENSOR_MONITOR_TAG, "Percent: %.2f%% (Raw: %d)", *percent, *raw_value);
+    } else {
+        ESP_LOGE(SENSOR_MONITOR_TAG, "Failed to read from LDR sensor. Error code: %d", ldr_result);
+    }
 }
