@@ -2,6 +2,7 @@
 #include "sensors.h"
 #include "display.h"
 #include "input.h"
+#include "alarm.h"
 
 const char *MAIN_MONITOR_TAG = "MAIN_MONITOR";
 
@@ -54,6 +55,18 @@ void InputTask(void *pvParameters) {
             prev_monitor_mode = monitor_mode;
         }
         vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(10));
+    }
+}
+
+void AlarmTask(void *pvParameters) {
+    Initialize_BUZZER_PIN();
+    SensorData alarmdata_Received;
+
+    while(true) {
+        if(xQueueReceive(alarmQueue, &alarmdata_Received, portMAX_DELAY) == pdPASS) {
+            AlarmState temperatureResult = evaluateTemperature(alarmdata_Received.temperature);
+            Buzzer_State(temperatureResult);
+        }
     }
 }
 
