@@ -219,4 +219,5 @@ void Queue_SENSORS_SEND_DATA(esp_err_t DHT22STATUS, esp_err_t LDRSTATUS, float *
     readSensorDataQueue.motionDetected = 0; // PIR NOT YET CONFIGURED
 
     xQueueSend(sensorQueue, &readSensorDataQueue, portMAX_DELAY);
+    xQueueSend(alarmQueue, &readSensorDataQueue, portMAX_DELAY);
 }
