@@ -38,10 +38,6 @@ static void left_counterclockwise(void) {
     }
 }
 
-
-
-
-
 static void IRAM_ATTR ISR_Handler(void *arg) {
     int check_DT = gpio_get_level(DT);
 
@@ -78,6 +74,7 @@ void Pin_CLK_DT_Init(void) {
     gpio_isr_handler_add(CLK, ISR_Handler, NULL);
 }
 
+// Function to receive data from the encoder and return the current display mode
 DisplayMode encoder_receive_data(void) {
     if(state_changed) {
         if(direction == 1) {
