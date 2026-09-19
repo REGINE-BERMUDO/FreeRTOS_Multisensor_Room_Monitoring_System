@@ -1,6 +1,7 @@
 #include "rtos_objects.h"
 #include "sensors.h"
 #include "display.h"
+#include "input.h"
 
 const char *MAIN_MONITOR_TAG = "MAIN_MONITOR";
 
@@ -13,7 +14,6 @@ void SensorTask(void *pvParameters) {
     
     float percent = 0.0f; // Variable to store the percentage of light intensity
     int raw_value = 0; // Variable to store the raw ADC value from the LDR sensor
-
 
     while(true) {
         esp_err_t DHT22_STATUS = DHT22_Print(&temperature, &humidity); // Get temperature and humidity from DHT22 sensor
@@ -38,6 +38,22 @@ void DisplayTask(void *pvParameters) {
             Display_DrawText(0, 32, data_print);
             Display_Show();
         }
+    }
+}
+
+void InputTask(void *pvParameters) {
+    TickType_t lastWakeTime = xTaskGetTickCount();
+
+    Pin_CLK_DT_Init();
+    uint8_t prev_monitor_mode = 1;
+
+    while(true) {
+        uint8_t monitor_mode = (uint8_t)encoder_receive_data();
+        if(monitor_mode != prev_monitor_mode) {
+            ESP_LOGI(MAIN_MONITOR_TAG, "Encoder State: %d", monitor_mode);
+            prev_monitor_mode = monitor_mode;
+        }
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(10));
     }
 }
 
