@@ -25,16 +25,24 @@ void SensorTask(void *pvParameters) {
 }
 
 void DisplayTask(void *pvParameters) {
+    Initialize_I2CFOR_SSD1306();
+    SensorData displaydata_Received;
+    char data_print[15];
+
+    while(true) {
+        if(xQueueReceive(sensorQueue, &displaydata_Received, portMAX_DELAY) == pdPASS) {
+            snprintf(data_print, sizeof(data_print), "%.1f C", displaydata_Received.temperature);
+            Display_Clear();
+            Display_DrawText(0, 0, "ROOM MONITOR");
+            Display_DrawText(0, 20, "Temperature");
+            Display_DrawText(0, 32, data_print);
+            Display_Show();
+        }
+    }
 }
 
 extern "C" void app_main() {
     ESP_LOGI(MAIN_MONITOR_TAG, "\nBCA152 FreeRTOS Multisensor Monitor\nSYSTEM STARTING...");
-
-
-    Initialize_I2CFOR_SSD1306(); // Initialize I2C for SSD1306 display
-    Display_Clear(); // Clear the display
-    Display_DrawText(0, 0, "Hello, ESP32!"); // Draw text on the display
-    Display_Show(); // Show the display
 
     Initialize_FreeRTOS_Queues(); // Initialize FreeRTOS queues    
     Initialize_FreeRTOS_Tasks(); // Initialize FreeRTOS tasks
