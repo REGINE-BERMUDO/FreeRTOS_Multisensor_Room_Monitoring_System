@@ -3,19 +3,21 @@
 
 #define SENSORQUEUELENGTH 5
 
+
 #include <freeRTOS/FreeRTOS.h>
 #include <freeRTOS/task.h>
 #include "sensors.h"
 
-extern QueueHandle_t sensorQueue;
+// FreeRTOS Queue Handlers
+extern QueueHandle_t sensorQueue; 
 
-// FreeRTOS Tasks Declaration
+// FreeRTOS Task Function Prototypes
 void SensorTask(void *pvParameters);
 void DisplayTask(void *pvParameters);
+void InputTask(void *pvParameters); 
 
-// One-Call Function for FreeRTOS Tasks Configuration
+// FreeRTOS Queue & Tasks Initialization
 void Initialize_FreeRTOS_Tasks(void);
-
 esp_err_t Initialize_FreeRTOS_Queues(void);
 
 #endif
