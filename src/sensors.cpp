@@ -179,22 +179,34 @@ esp_err_t DHT22_Print(float *temperature, float *humidity) {
     esp_err_t dht22_result = DHT22_send_receive_data(temperature, humidity);
 
     if(dht22_result == ESP_OK) {
-        ESP_LOGI(SENSOR_MONITOR_TAG, "Temperature: %.2f°C, Humidity: %.2f%%", *temperature, *humidity);
+        if(xSemaphoreTake(stateSemaphore, portMAX_DELAY)) {
+            ESP_LOGI(SENSOR_MONITOR_TAG, "Temperature: %.2f°C, Humidity: %.2f%%", *temperature, *humidity);
+            xSemaphoreGive(stateSemaphore);
+        }
         return ESP_OK;
     } else {
-        ESP_LOGE(SENSOR_MONITOR_TAG, "Failed to read from DHT22 sensor. Error code: %d", dht22_result);
+        if(xSemaphoreTake(stateSemaphore, portMAX_DELAY)) {
+            ESP_LOGE(SENSOR_MONITOR_TAG, "Failed to read from DHT22 sensor. Error code: %d", dht22_result);
+            xSemaphoreGive(stateSemaphore);
+        }
         return ESP_ERR_TIMEOUT;
-    } 
-}
+    }   
+ } 
 
 // One-Call Function for LDR Print
 esp_err_t LDR_Print(float *percent, int *raw_value) {
     esp_err_t ldr_result = LDR_receive_data(percent, raw_value);
     if(ldr_result == ESP_OK) {
-        ESP_LOGI(SENSOR_MONITOR_TAG, "Percent: %.2f%% (Raw: %d)", *percent, *raw_value);
+        if(xSemaphoreTake(stateSemaphore, portMAX_DELAY)) {
+            ESP_LOGI(SENSOR_MONITOR_TAG, "Percent: %.2f%% (Raw: %d)", *percent, *raw_value);
+            xSemaphoreGive(stateSemaphore);
+        }
         return ESP_OK;
     } else {
-        ESP_LOGE(SENSOR_MONITOR_TAG, "Failed to read from LDR sensor. Error code: %d", ldr_result);
+        if(xSemaphoreTake(stateSemaphore, portMAX_DELAY)) {
+            ESP_LOGE(SENSOR_MONITOR_TAG, "Failed to read from LDR sensor. Error code: %d", ldr_result);
+            xSemaphoreGive(stateSemaphore);
+        }
         return ESP_ERR_TIMEOUT;
     }
 }

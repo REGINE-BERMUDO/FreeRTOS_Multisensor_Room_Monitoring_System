@@ -22,9 +22,15 @@ static void PIR_inactiveState(void) {
     if(currentState == true && prevState == false) {
         if(!eventState & EVENT_ACTIVE) { // If Inactive
             xEventGroupSetBits(stateEventGroup, EVENT_ACTIVE);
-            ESP_LOGI(MOTION_MONITOR_TAG, "Motion Detected! State: Inactive to Active State");
+            if(xSemaphoreTake(stateSemaphore, portMAX_DELAY)) {
+                ESP_LOGI(MOTION_MONITOR_TAG, "Motion Detected! State: Inactive to Active State");
+                xSemaphoreGive(stateSemaphore);
+            }
         } else { // If Already Active
-            ESP_LOGI(MOTION_MONITOR_TAG, "Motion Detected!");
+            if(xSemaphoreTake(stateSemaphore, portMAX_DELAY)) {
+                ESP_LOGI(MOTION_MONITOR_TAG, "Motion Detected!");
+                xSemaphoreGive(stateSemaphore);
+            }
         }
     }
 }
@@ -43,7 +49,10 @@ static void PIR_activeState(TickType_t *lastTickState) {
     if(eventState & EVENT_ACTIVE) {
         if((xTaskGetTickCount() - *lastTickState) > pdMS_TO_TICKS(15000)) {
             xEventGroupClearBits(stateEventGroup, EVENT_ACTIVE);
-            ESP_LOGI(MOTION_MONITOR_TAG, "Timeout Reached! State: Active to Inactive State");
+            if(xSemaphoreTake(stateSemaphore, portMAX_DELAY)) {
+                ESP_LOGI(MOTION_MONITOR_TAG, "Timeout Reached! State: Active to Inactive State");
+                xSemaphoreGive(stateSemaphore);
+            }
         }
     }
 }

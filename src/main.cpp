@@ -54,7 +54,11 @@ void InputTask(void *pvParameters) {
         uint8_t monitor_mode = (uint8_t)encoder_receive_data();
         if(monitor_mode != prev_monitor_mode) {
             xQueueSend(inputQueue, &monitor_mode, 0);
-            ESP_LOGI(MAIN_MONITOR_TAG, "Encoder State: %d", monitor_mode);
+            if(xSemaphoreTake(stateSemaphore, portMAX_DELAY)) {
+                ESP_LOGI(MAIN_MONITOR_TAG, "Encoder State: %d", monitor_mode);
+                xSemaphoreGive(stateSemaphore);
+            }
+
             prev_monitor_mode = monitor_mode;
         }
         vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(10));
