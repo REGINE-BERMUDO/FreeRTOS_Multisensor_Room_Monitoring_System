@@ -3,6 +3,9 @@
 // FreeRTOS Queue Handlers
 QueueHandle_t sensorQueue;
 QueueHandle_t alarmQueue;
+QueueHandle_t inputQueue;
+QueueSetHandle_t displayQueue;
+
 EventGroupHandle_t stateEventGroup; // Event group to manage system states
 
 
@@ -17,7 +20,7 @@ void Initialize_FreeRTOS_Tasks(void){
 esp_err_t Initialize_FreeRTOS_Queues(void) {
     sensorQueue = xQueueCreate(SENSORQUEUELENGTH, sizeof(SensorData)); 
     alarmQueue = xQueueCreate(ALARMQUEUELENGTH, sizeof(SensorData));
-
+    inputQueue = xQueueCreate(INPUTQUEUELENGTH, sizeof(uint8_t));
     if(sensorQueue == nullptr) {
         return ESP_ERR_TIMEOUT;
     }
@@ -25,6 +28,18 @@ esp_err_t Initialize_FreeRTOS_Queues(void) {
     if(alarmQueue == nullptr) {
         return ESP_ERR_TIMEOUT;
     }
+    if(inputQueue == nullptr) {
+        return ESP_ERR_TIMEOUT;
+    }
+
+    displayQueue = xQueueCreateSet(SENSORQUEUELENGTH + INPUTQUEUELENGTH);
+    if(displayQueue != NULL) {
+        xQueueAddToSet(sensorQueue, displayQueue);
+        xQueueAddToSet(inputQueue, displayQueue);
+    } else {
+        return ESP_ERR_TIMEOUT;
+    }
+
     return ESP_OK;
 }
 

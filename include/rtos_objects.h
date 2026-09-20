@@ -3,6 +3,7 @@
 
 #define SENSORQUEUELENGTH 5
 #define ALARMQUEUELENGTH 5
+#define INPUTQUEUELENGTH 5
 
 #define EVENT_ACTIVE BIT0 
 #define EVENT_MOTION BIT1
@@ -15,6 +16,8 @@
 // FreeRTOS Queue Handlers
 extern QueueHandle_t sensorQueue;
 extern QueueHandle_t alarmQueue; 
+extern QueueHandle_t inputQueue;
+extern QueueSetHandle_t displayQueue;
 extern EventGroupHandle_t stateEventGroup; // Event group to manage system states
 
 // FreeRTOS Task Function Prototypes
