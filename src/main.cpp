@@ -3,6 +3,7 @@
 #include "display.h"
 #include "input.h"
 #include "alarm.h"
+#include "motion.h"
 
 const char *MAIN_MONITOR_TAG = "MAIN_MONITOR";
 
@@ -70,9 +71,20 @@ void AlarmTask(void *pvParameters) {
     }
 }
 
+void MotionTask(void *pvParameters) {
+    TickType_t lastTickState = xTaskGetTickCount(); // Initialize last tick state for motion detection timing
+    Initialize_PIR_PIN();
+
+    while(true) {
+        PIR_State(&lastTickState); // Check the state of the PIR sensor and update event group bits accordingly
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
 extern "C" void app_main() {
     ESP_LOGI(MAIN_MONITOR_TAG, "\nBCA152 FreeRTOS Multisensor Monitor\nSYSTEM STARTING...");
 
+    Initialize_FreeRTOS_Semaphore_Event(); // Initialize FreeRTOS event group for system state management
     Initialize_FreeRTOS_Queues(); // Initialize FreeRTOS queues    
     Initialize_FreeRTOS_Tasks(); // Initialize FreeRTOS tasks
 }
