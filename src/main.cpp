@@ -52,6 +52,7 @@ void InputTask(void *pvParameters) {
     while(true) {
         uint8_t monitor_mode = (uint8_t)encoder_receive_data();
         if(monitor_mode != prev_monitor_mode) {
+            xQueueSend(inputQueue, &monitor_mode, 0);
             ESP_LOGI(MAIN_MONITOR_TAG, "Encoder State: %d", monitor_mode);
             prev_monitor_mode = monitor_mode;
         }
