@@ -216,7 +216,7 @@ void Queue_SENSORS_SEND_DATA(esp_err_t DHT22STATUS, esp_err_t LDRSTATUS, float *
     } else {
         readSensorDataQueue.lightLevel = 0;
     }
-    readSensorDataQueue.motionDetected = 0; // PIR NOT YET CONFIGURED
+    readSensorDataQueue.motionDetected = (xEventGroupGetBits(stateEventGroup) & EVENT_MOTION) ? true : false; // Check if motion is detected and set the motionDetected field accordingly
 
     xQueueSend(sensorQueue, &readSensorDataQueue, portMAX_DELAY);
     xQueueSend(alarmQueue, &readSensorDataQueue, portMAX_DELAY);
