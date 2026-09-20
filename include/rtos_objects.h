@@ -18,6 +18,7 @@ extern QueueHandle_t sensorQueue;
 extern QueueHandle_t alarmQueue; 
 extern QueueHandle_t inputQueue;
 extern QueueSetHandle_t displayQueue;
+extern SemaphoreHandle_t stateSemaphore; // Semaphore to manage system states
 extern EventGroupHandle_t stateEventGroup; // Event group to manage system states
 
 // FreeRTOS Task Function Prototypes

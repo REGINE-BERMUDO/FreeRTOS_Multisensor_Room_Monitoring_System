@@ -5,6 +5,7 @@ QueueHandle_t sensorQueue;
 QueueHandle_t alarmQueue;
 QueueHandle_t inputQueue;
 QueueSetHandle_t displayQueue;
+SemaphoreHandle_t stateSemaphore; // Semaphore to manage system states
 
 EventGroupHandle_t stateEventGroup; // Event group to manage system states
 
@@ -21,6 +22,8 @@ esp_err_t Initialize_FreeRTOS_Queues(void) {
     sensorQueue = xQueueCreate(SENSORQUEUELENGTH, sizeof(SensorData)); 
     alarmQueue = xQueueCreate(ALARMQUEUELENGTH, sizeof(SensorData));
     inputQueue = xQueueCreate(INPUTQUEUELENGTH, sizeof(uint8_t));
+    stateSemaphore = xSemaphoreCreateMutex();
+
     if(sensorQueue == nullptr) {
         return ESP_ERR_TIMEOUT;
     }
@@ -39,7 +42,10 @@ esp_err_t Initialize_FreeRTOS_Queues(void) {
     } else {
         return ESP_ERR_TIMEOUT;
     }
-
+    if(stateSemaphore == nullptr) {
+        return ESP_ERR_TIMEOUT;
+    }
+    
     return ESP_OK;
 }
 
