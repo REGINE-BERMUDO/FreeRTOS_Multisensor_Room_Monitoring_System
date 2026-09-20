@@ -29,17 +29,18 @@ void SensorTask(void *pvParameters) {
 void DisplayTask(void *pvParameters) {
     Initialize_I2CFOR_SSD1306();
     SensorData displaydata_Received;
+    uint8_t current_State = 0;
     char data_print[15];
 
     while(true) {
-        if(xQueueReceive(sensorQueue, &displaydata_Received, portMAX_DELAY) == pdPASS) {
-            snprintf(data_print, sizeof(data_print), "%.1f C", displaydata_Received.temperature);
-            Display_Clear();
-            Display_DrawText(0, 0, "ROOM MONITOR");
-            Display_DrawText(0, 20, "Temperature");
-            Display_DrawText(0, 32, data_print);
-            Display_Show();
-        }
+        QueueSetMemberHandle_t currentQueue = xQueueSelectFromSet(displayQueue, portMAX_DELAY);
+
+        if(currentQueue == sensorQueue) xQueueReceive(sensorQueue, &displaydata_Received, 0);
+        if(currentQueue == inputQueue) xQueueReceive(inputQueue, &current_State, 0);
+
+        bool isActive = (xEventGroupGetBits(stateEventGroup) & EVENT_ACTIVE) != 0;
+
+        Display_Update(&displaydata_Received, current_State, isActive, data_print, sizeof(data_print));
     }
 }
 

@@ -42,3 +42,34 @@ void Display_DrawText(int x, int y, const char *text){
 void Display_Show(void) {
     ssd1306_display(display_handle);
 }
+
+void Display_Update(SensorData *display_dataReceived, uint8_t current_State, bool isActive, char *data_print, size_t data_print_size) {
+    if(isActive) {
+        Display_Clear();
+        Display_DrawText(0, 0, "ROOM MONITOR");
+
+        switch((DisplayMode)current_State) {
+            case DisplayMode::TEMPERATURE:
+                Display_DrawText(0, 20, "TEMPERATURE");
+                snprintf(data_print, data_print_size, "%.1f C", display_dataReceived->temperature);
+                break;
+            case DisplayMode::HUMIDITY:
+                Display_DrawText(0, 20, "HUMIDITY");
+                snprintf(data_print, data_print_size, "%.1f RH", display_dataReceived->humidity);     
+                break;
+            case DisplayMode::LIGHT:
+                Display_DrawText(0, 20, "LIGHT");
+                snprintf(data_print, data_print_size, "%d", display_dataReceived->lightLevel);
+                break;
+            case DisplayMode::MOTION:
+                Display_DrawText(0, 20, "MOTION");
+                snprintf(data_print, data_print_size, "%s", display_dataReceived->motionDetected ? "DETECTED" : "CLEAR");
+                break;
+        }
+        Display_DrawText(0, 32, data_print);
+        Display_Show();
+    } else {
+        Display_Clear();
+        Display_Show();
+    }
+}
