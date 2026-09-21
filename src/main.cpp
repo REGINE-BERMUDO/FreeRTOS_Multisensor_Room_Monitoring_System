@@ -45,13 +45,13 @@ void DisplayTask(void *pvParameters) {
 }
 
 void InputTask(void *pvParameters) {
-    TickType_t lastWakeTime = xTaskGetTickCount();
+    TickType_t lastWakeTime = xTaskGetTickCount(); // Get the current tick count for task delay management
 
-    Pin_CLK_DT_Init();
+    Pin_CLK_DT_Init(); // Initialize the CLK and DT pins for the rotary encoder
     uint8_t prev_monitor_mode = 1;
 
     while(true) {
-        uint8_t monitor_mode = (uint8_t)encoder_receive_data();
+        uint8_t monitor_mode = (uint8_t)encoder_receive_data(); // Get the current display mode from the rotary encoder
         if(monitor_mode != prev_monitor_mode) {
             xQueueSend(inputQueue, &monitor_mode, 0);
             if(xSemaphoreTake(stateSemaphore, portMAX_DELAY)) {
