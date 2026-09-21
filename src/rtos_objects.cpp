@@ -16,6 +16,7 @@ void Initialize_FreeRTOS_Tasks(void){
     xTaskCreate(InputTask, "Input Task", 2048, NULL, 3, NULL);
     xTaskCreate(AlarmTask, "Alarm Task", 2048, NULL, 2, NULL); 
     xTaskCreate(MotionTask, "Motion Task", 2048, NULL, 3, NULL);
+    xTaskCreate(StateTask, "State Task", 2048, NULL, 3, NULL);
 }
 
 esp_err_t Initialize_FreeRTOS_Queues(void) {

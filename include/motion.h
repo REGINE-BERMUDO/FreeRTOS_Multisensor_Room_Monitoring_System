@@ -8,6 +8,6 @@
 #include <esp_log.h>
 
 void Initialize_PIR_PIN(void);
-void PIR_State(TickType_t *lastTickState);
+void PIR_State(void);
 
-#endif // MOTION_H
+#endif

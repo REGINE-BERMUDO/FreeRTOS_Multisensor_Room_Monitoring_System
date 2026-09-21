@@ -27,6 +27,7 @@ void DisplayTask(void *pvParameters);
 void InputTask(void *pvParameters); 
 void AlarmTask(void *pvParameters);
 void MotionTask(void *pvParameters);
+void StateTask(void *pvParameters);
 
 
 // FreeRTOS Queue & Tasks Initialization

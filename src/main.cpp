@@ -4,6 +4,7 @@
 #include "input.h"
 #include "alarm.h"
 #include "motion.h"
+#include "system_state.h"
 
 const char *MAIN_MONITOR_TAG = "MAIN_MONITOR";
 
@@ -78,11 +79,25 @@ void AlarmTask(void *pvParameters) {
 }
 
 void MotionTask(void *pvParameters) {
-    TickType_t lastTickState = xTaskGetTickCount(); // Initialize last tick state for motion detection timing
     Initialize_PIR_PIN();
 
     while(true) {
-        PIR_State(&lastTickState); // Check the state of the PIR sensor and update event group bits accordingly
+        PIR_State(); // Check the state of the PIR sensor and update event group bits accordingly
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+void StateTask(void *pvParameters) {
+    TickType_t lastWakeTime = xTaskGetTickCount();
+    bool currentState;
+    bool currentMotion;
+    uint32_t elapsedTime;
+
+    while(true) {
+        system_State(&currentState, &currentMotion, &elapsedTime, &lastWakeTime);
+        bool temporaryStateHolder = evaluate_State(currentState, currentMotion, elapsedTime);
+        print_State(currentState, temporaryStateHolder);
+
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
