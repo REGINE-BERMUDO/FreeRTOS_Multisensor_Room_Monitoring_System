@@ -59,7 +59,7 @@ void Display_Update(SensorData *display_dataReceived, uint8_t current_State, boo
                 break;
             case DisplayMode::LIGHT:
                 Display_DrawText(0, 20, "LIGHT");
-                snprintf(data_print, data_print_size, "%d", display_dataReceived->lightLevel);
+                snprintf(data_print, data_print_size, "%d%%", display_dataReceived->lightLevel);
                 break;
             case DisplayMode::MOTION:
                 Display_DrawText(0, 20, "MOTION");
