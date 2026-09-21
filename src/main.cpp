@@ -41,7 +41,8 @@ void DisplayTask(void *pvParameters) {
 
         bool isActive = (xEventGroupGetBits(stateEventGroup) & EVENT_ACTIVE) != 0;
 
-        Display_Update(&displaydata_Received, current_State, isActive, data_print, sizeof(data_print));
+        Display_Process_Update(&displaydata_Received, current_State, data_print, sizeof(data_print));
+        Display_Update(current_State, isActive, data_print);
     }
 }
 
