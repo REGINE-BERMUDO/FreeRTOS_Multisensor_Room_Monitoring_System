@@ -103,6 +103,8 @@ void StateTask(void *pvParameters) {
     }
 }
 
+#ifndef PIO_UNIT_TESTING
+
 extern "C" void app_main() {
     ESP_LOGI(MAIN_MONITOR_TAG, "\nBCA152 FreeRTOS Multisensor Monitor\nSYSTEM STARTING...");
 
@@ -111,3 +113,4 @@ extern "C" void app_main() {
     Initialize_FreeRTOS_Tasks(); // Initialize FreeRTOS tasks
 }
 
+#endif // PIO_UNIT_TESTING
