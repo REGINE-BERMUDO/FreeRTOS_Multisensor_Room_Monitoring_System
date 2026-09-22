@@ -41,6 +41,6 @@ esp_err_t LDR_receive_data(float *percent, int *raw_value);
 void Initialize_DHT22_LDR_PINS(void);
 esp_err_t DHT22_Print(float *temperature, float *humidity);
 esp_err_t LDR_Print(float *percent, int *raw_value);
-void Queue_SENSORS_SEND_DATA(esp_err_t DHT22STATUS, esp_err_t LDRSTATUS, float *temperature, float *humidity, float *percent, int *raw_value);
+void Queue_SENSORS_SEND_DATA(esp_err_t DHT22STATUS, esp_err_t LDRSTATUS, const float *temperature, const float *humidity, const float *percent, int *raw_value);
 
 #endif // SENSORS_H

@@ -60,7 +60,7 @@ void Display_Process_Update(SensorData *display_dataReceived, uint8_t current_St
     }
 }
 
-void Display_Update(uint8_t current_State, bool isActive, char *data_print) {
+void Display_Update(uint8_t current_State, bool isActive, const char *data_print) {
     if(isActive) {
         Display_Clear();
         Display_DrawText(0, 0, "ROOM MONITOR");
