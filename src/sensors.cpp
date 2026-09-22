@@ -212,7 +212,7 @@ esp_err_t LDR_Print(float *percent, int *raw_value) {
 }
 
 // One-Call Function for Queueing Sensor Data
-void Queue_SENSORS_SEND_DATA(esp_err_t DHT22STATUS, esp_err_t LDRSTATUS, float *temperature, float *humidity, float *percent, int *raw_value) {
+void Queue_SENSORS_SEND_DATA(esp_err_t DHT22STATUS, esp_err_t LDRSTATUS, const float *temperature, const float *humidity, const float *percent, int *raw_value) {
     SensorData readSensorDataQueue;
 
     if(DHT22STATUS == ESP_OK) {

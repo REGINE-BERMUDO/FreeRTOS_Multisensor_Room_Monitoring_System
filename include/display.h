@@ -16,6 +16,6 @@ void Display_Clear(void);
 void Display_DrawText(int x, int y, const char *text);
 void Display_Show(void);
 void Display_Process_Update(SensorData *display_dataReceived, uint8_t current_State, char *data_print, size_t data_print_size);
-void Display_Update(uint8_t current_State, bool isActive, char *data_print);
+void Display_Update(uint8_t current_State, bool isActive, const char *data_print);
 
 #endif
