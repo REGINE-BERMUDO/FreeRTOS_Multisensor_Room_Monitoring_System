@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Jonathan Wåhrenberg
  */
 
-#include "ssd1306.h"
+#include "OLED/ssd1306.h"
 #include "ssd1306_font.h"
 #include "ssd1306_private.h"
 

@@ -5,7 +5,7 @@
 #define SCLPIN GPIO_NUM_22
 
 #include <driver/i2c_master.h>
-#include <ssd1306.h>
+#include <OLED/ssd1306.h>
 #include "sensors.h"
 #include "rtos_objects.h"
 #include "input.h"
