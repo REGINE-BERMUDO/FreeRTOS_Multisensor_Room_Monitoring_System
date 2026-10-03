@@ -32,12 +32,156 @@ By completing this project, we should be able to:
 8. Apply **unit testing and static analysis** to improve software reliability, maintainability, and code quality.
 
 ## System Architecture
-![alt text](mermaid-diagram.png)
+
+```mermaid
+flowchart TB
+
+    %% =========================
+    %% INPUT DEVICES
+    %% =========================
+    subgraph INPUT["INPUT DEVICES"]
+        direction LR
+
+        PIR["PIR Sensor<br/>Motion"]
+        DHT["DHT22<br/>Temperature, humidity"]
+        LDR["LDR<br/>Ambient Light"]
+        ENC["Rotary Encoder<br/>CLK / DT"]
+    end
+
+    %% =========================
+    %% ESP32 / FREERTOS
+    %% =========================
+    subgraph ESP["ESP32 + ESP-IDF + FreeRTOS"]
+        direction TB
+
+        MT["MotionTask"]
+        ST["SensorTask"]
+        IT["InputTask"]
+
+        EG["Event Group"]
+        SQ["sensorQueue"]
+        IQ["inputQueue"]
+
+        SST["StateTask"]
+        AQ["alarmQueue"]
+        DT["DisplayTask"]
+
+        AT["AlarmTask"]
+    end
+
+    %% =========================
+    %% OUTPUT DEVICES
+    %% =========================
+    subgraph OUTPUT["OUTPUT DEVICES"]
+        direction LR
+
+        BUZZER["Buzzer"]
+        OLED["SSD1306 OLED"]
+    end
+
+    %% Input → Tasks
+    PIR --> MT
+    DHT --> ST
+    LDR --> ST
+    ENC --> IT
+
+    %% Motion Flow
+    MT --> EG
+    EG --> SST
+
+    %% Sensor Flow
+    ST --> SQ
+    SQ --> AQ
+    AQ --> AT
+
+    %% Display Flow
+    SQ --> DT
+    IT --> IQ
+    IQ --> DT
+
+    %% Outputs
+    AT --> BUZZER
+    DT --> OLED
+
+    %% =========================
+    %% STYLING
+    %% =========================
+    classDef box fill:#003B6F,stroke:#1E5A91,color:#9CCBFF,stroke-width:1px;
+    classDef section fill:transparent,stroke:#888,color:#FFFFFF,stroke-width:1px;
+
+    class PIR,DHT,LDR,ENC,MT,ST,IT,EG,SQ,IQ,SST,AQ,DT,AT,BUZZER,OLED box;
+    class INPUT,ESP,OUTPUT section;
+
+    style INPUT fill:transparent
+    style ESP fill:transparent
+    style OUTPUT fill:transparent
+```
 
 ## FreeRTOS Architecture
-![alt text](<mermaid-diagram (1).png>)
 
-What the diagram represents
+```mermaid
+flowchart LR
+
+    %% =========================
+    %% FreeRTOS TASKS
+    %% =========================
+    subgraph TASKS["FreeRTOS Tasks"]
+        direction TB
+
+        MT["MotionTask<br/>P3"]
+        SST["StateTask<br/>P3"]
+        DT["DisplayTask<br/>P1"]
+        IT["InputTask<br/>P3"]
+        ST["SensorTask<br/>P2"]
+        AT["AlarmTask<br/>P2"]
+    end
+
+    %% =========================
+    %% FREERTOS OBJECTS
+    %% =========================
+    subgraph OBJECTS["FreeRTOS Objects"]
+        direction TB
+
+        EG["stateEventGroup"]
+
+        IQ["inputQueue"]
+        DQ["displayQueue<br/>(Queue Set)"]
+
+        SQ["sensorQueue"]
+        AQ["alarmQueue"]
+    end
+
+    %% =========================
+    %% COMMUNICATION
+    %% =========================
+
+    %% Motion and state
+    MT --> EG
+    EG --> SST
+    EG --> ST
+
+    %% Input
+    IT --> IQ
+    IQ --> DQ
+
+    %% Sensor
+    ST --> SQ
+    SQ --> DQ
+    SQ --> AQ
+
+    %% Outputs
+    DQ --> DT
+    AQ --> AT
+
+    %% Styling
+    classDef task fill:#00345f,stroke:#1e5b8f,color:#9dccf5,stroke-width:1px;
+    classDef object fill:#00345f,stroke:#1e5b8f,color:#9dccf5,stroke-width:1px;
+
+    class MT,SST,DT,IT,ST,AT task;
+    class EG,IQ,DQ,SQ,AQ object;
+```
+
+What the diagram represents:
 ```text
                     ┌─────────────────────────────────┐
                     │          FreeRTOS Tasks         │
@@ -54,7 +198,7 @@ What the diagram represents
                     │ sensorQueue   alarmQueue        │
                     │ inputQueue    displayQueue      │
                     │ stateEventGroup                 │
-                    │ stateSemaphore                  │
+                    │                                 │
                     └───────────────┬─────────────────┘
                                     │
                                     ▼
@@ -92,7 +236,6 @@ The rotary encoder allows the user to switch between:
 ### Temperature Alarm
 The buzzer is controlled based on the measured temperature:
 
-- **18–30 °C** → Normal
 - **Below 18 °C** → Low Temperature Alarm
 - **Above 30 °C** → High Temperature Alarm
 
@@ -102,10 +245,10 @@ The system is divided into six FreeRTOS tasks. Each task has a specific responsi
 
 | Task            | Priority | Stack Size | Period / Blocking                     | Main Responsibility                                                                                  |
 | --------------- | -------: | ---------: | ------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **SensorTask**  |        2 |       4096 | Every 2 seconds                       | Reads temperature, humidity, and light data, then sends the readings to the sensor and alarm queues. |
-| **DisplayTask** |        1 |       4096 | Blocks until data is available        | Receives sensor or input data through the queue set and updates the OLED display.                    |
+| **SensorTask**  |        2 |       4096 | Every 2 seconds                       | Reads temperature, humidity, and light data, then sends the readings to the sensor queues and alarm queues. |
+| **DisplayTask** |        1 |       4096 | Blocks until data is available        | Receives sensor queue or input queue through the queue set and updates the OLED display.                    |
 | **InputTask**   |        3 |       2048 | Every 10 ms                           | Reads the rotary encoder and sends display-mode changes to the input queue.                          |
-| **AlarmTask**   |        2 |       2048 | Blocks until sensor data is available | Evaluates the temperature and activates or deactivates the buzzer.                                   |
+| **AlarmTask**   |        2 |       2048 | Blocks until alarm queue is available | Evaluates the temperature and activates or deactivates the buzzer.                                   |
 | **MotionTask**  |        3 |       2048 | Every 100 ms                          | Continuously checks the PIR sensor and updates the motion event flag.                                |
 | **StateTask**   |        3 |       2048 | Every 100 ms                          | Monitors system and motion states and changes the system between ACTIVE and INACTIVE.                |
 
@@ -126,7 +269,7 @@ flowchart TB
     IQ["inputQueue"]
     QS["displayQueue<br/>Queue Set"]
     EG["stateEventGroup"]
-    SEM["stateSemaphore<br/>Mutex"]
+   
 
     OLED["SSD1306 OLED"]
     BUZZER["Buzzer"]
@@ -146,9 +289,6 @@ flowchart TB
     MT --> EG
     EG --> SST
 
-    MT -.-> SEM
-    IT -.-> SEM
-    SST -.-> SEM
 ```
 
 ### Task Scheduling
@@ -263,32 +403,30 @@ The system uses a simple two-state machine to determine whether the monitored ro
 | **ACTIVE**   | Motion is detected or the inactivity timeout has not been reached | The system remains active and continues monitoring the environment.    |
 | **INACTIVE** | No motion has been detected for more than 15 seconds              | The system changes to the inactive state until new motion is detected. |
 
-### State Transition Flow
+## State Machine
 
-```text
-                ┌─────────────────────┐
-                │      SYSTEM START   │
-                └──────────┬──────────┘
-                           ▼
-                  ┌────────────────┐
-                  │     ACTIVE     │
-                  └───────┬────────┘
-                          │
-             ┌────────────┴────────────┐
-             │                         │
-       Motion Detected            No Motion
-             │                         │
-             │                   > 15 seconds
-             │                         │
-             │                         ▼
-             │                  ┌──────────────┐
-             │                  │   INACTIVE   │
-             │                  └──────┬───────┘
-             │                         │
-             │                  Motion Detected
-             │                         │
-             └─────────────────────────┘
+The system uses a simple two-state machine to determine whether the monitored room is **ACTIVE** or **INACTIVE**. The state is controlled by the PIR motion sensor and a **15-second inactivity timeout**.
+
+```mermaid
+stateDiagram-v2
+
+    [*] --> ACTIVE : System Start
+
+    ACTIVE --> ACTIVE : Motion detected<br/>or timeout < 15s
+    ACTIVE --> INACTIVE : No motion for > 15s
+
+    INACTIVE --> ACTIVE : Motion detected
+    INACTIVE --> INACTIVE : No motion
+
 ```
+
+### State Description
+
+| State        | Condition                                                         | Behavior                                                               |
+| ------------ | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **ACTIVE**   | Motion is detected or the inactivity timeout has not been reached | The system remains active and continues monitoring the environment.    |
+| **INACTIVE** | No motion has been detected for more than 15 seconds              | The system changes to the inactive state until new motion is detected. |
+
 
 ### State Logic
 
@@ -298,4 +436,47 @@ The **StateTask** checks the current state and calculates the elapsed time since
 
 The state transitions are managed using the `EVENT_ACTIVE` and `EVENT_MOTION` bits in the `stateEventGroup`.
 
-### in progress...
+## Repository Structure
+ ### Main Branch
+```text
+FreeRTOS_Multisensor_Room_Monitoring_System/
+│
+├── include/
+│   ├── OLED/
+│   │   └── ssd1306.h
+│   ├── alarm.h
+│   ├── display.h
+│   ├── input.h
+│   ├── motion.h
+│   ├── rtos_objects.h
+│   ├── sensors.h
+│   └── system_state.h
+│
+├── src/
+│   ├── OLED/
+│   │   ├── ssd1306_core.c
+│   │   ├── ssd1306_font.c
+│   │   ├── ssd1306_font.h
+│   │   ├── ssd1306_i2c.c
+│   │   ├── ssd1306_private.h
+│   │   └── ssd1306_spi.c
+│   │
+│   ├── alarm.cpp
+│   ├── display.cpp
+│   ├── input.cpp
+│   ├── main.cpp
+│   ├── motion.cpp
+│   ├── rtos_objects.cpp
+│   ├── sensors.cpp
+│   └── system_state.cpp
+│
+├── test/
+│   └── README
+│
+├── diagram.json
+├── platformio.ini
+├── CMakeLists.txt
+├── sdkconfig.esp32dev
+├── wokwi.toml
+└── README.md
+```
