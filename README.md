@@ -480,3 +480,52 @@ FreeRTOS_Multisensor_Room_Monitoring_System/
 ├── wokwi.toml
 └── README.md
 ```
+## Getting Started
+
+### Requirements
+
+Before running the project, install the following:
+
+- **Visual Studio Code**
+- **PlatformIO IDE**
+- **ESP32 development platform**
+- **Wokwi** for simulation
+- USB cable and ESP32 board for physical hardware testing
+
+### Clone the Repository
+
+```bash
+git clone <your-repository-url>
+cd FreeRTOS_Multisensor_Room_Monitoring_System
+```
+
+### Open the Project
+
+1. Open **Visual Studio Code**.
+2. Open the cloned project folder.
+3. Make sure the **PlatformIO extension** is installed.
+4. Allow PlatformIO to install the required ESP32 development tools and dependencies.
+
+## Building the Project
+
+### Build Using PlatformIO
+
+Open the PlatformIO terminal and run:
+
+```bash
+pio run
+```
+
+This compiles the project and checks the source code for errors.
+
+
+### Run Using Wokwi
+
+The project also includes a Wokwi simulation configuration.
+
+1. Open the project in Visual Studio Code.
+2. Open `diagram.json`.
+3. Start the Wokwi simulation.
+4. Observe the simulated sensors, OLED display, rotary encoder, and buzzer.
+
+The system can therefore be tested either using  **Wokwi simulation**.
